@@ -1055,20 +1055,221 @@ body .markdown-body
 .codehilite .vi{color:teal}
 .codehilite .il{color:#009999}
 .codehilite .gc{color:#999;background-color:#EAF2F5}
-</style><title>项目文档</title></head><body><article class="markdown-body"><h1 id="v10">润普智能审判辅助系统 v1.0<a class="headerlink" href="#v10" title="Permanent link"></a></h1>
-<p>文书生成系统根据案件信息自动生成对应文书。主要功能是文书模板编辑，文书生成.</p>
-<h2 id="1">1. 说明<a class="headerlink" href="#1" title="Permanent link"></a></h2>
+</style><title>项目文档</title></head><body><article class="markdown-body"><h2 id="1">1. 运行开发服务器<a class="headerlink" href="#1" title="Permanent link"></a></h2>
+<h3 id="1_1">1. 前端<a class="headerlink" href="#1_1" title="Permanent link"></a></h3>
+<ol>
+<li>配置 Nginx</li>
+</ol>
+<p>前端需要通过 Nginx 进行反向代理和响应静态文件. 下面是一个完整的示例. 需要注意的部分有:</p>
+<ul>
+<li><code>listen</code> - Nginx 响应的端口.</li>
+<li><code>server_name</code> - 需要修改为我们本机的 IP 地址. 用户也将通过该地址访问系统.</li>
+<li><code>root</code> - 需要修改为前端代码 dist 文件夹地址, Nginx 从这个目录下响应静态文件.</li>
+<li><code>access_log</code>, <code>error_log</code> - Nginx 日志文件路径, 需要确保这两个日志文件是存在且 Nginx 有写入权限的.</li>
+<li>django <code>proxy_pass</code> - 这是 Nginx 代理到后端开发服务器的 IP 地址. 需要将 <code>http://localhost:8009</code> 替换为后端相应的 IP 和端口.</li>
+<li>onlyofficeplugin <code>proxy_pass</code> - 这是 Nginx 代理到 Minio 对象存储响应 OnlyOffice 插件的地址, 需要将 <code>http://localhost:8029</code> 替换为 Minio 相应的 IP 和端口. 注意最后是没有 <code>/</code> 的.</li>
+</ul>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64</pre></div></td><td class="code"><div class="codehilite"><pre>server {
+    listen                      9000;
+    server_name                 192.168.2.193 192.168.2.188 0.0.0.0 localhost;
+    client_max_body_size        10m;
+
+    gzip_vary                   on;
+    gzip_proxied                any;
+    gzip_comp_level             6;
+    gzip_buffers                16 8k;
+    gzip_http_version           1.1;
+    gzip_types                  text/plain text/css application/json application/x-javascript;
+    charset                     utf-8;
+
+    root               /media/pw/workspace/_current/wssc/frontend/dist/;
+    access_log         /var/www/project_name/logs/nginx/access.log;
+    error_log          /var/www/project_name/logs/nginx/error.log;
+
+    error_page         404 /404.html;
+
+    # frontend default index
+    location = / {
+        index          index.html;
+    }
+
+    # frontend static files
+    location ^~ /static/ {
+    }
+
+    # django server apis
+    location ^~ /api/ {
+        proxy_pass http://localhost:8009/api/;
+    }
+
+    # django admin page
+    location ^~ /admin/ {
+        proxy_pass http://localhost:8009/admin/;
+    }
+
+    # django admin static files
+    location ^~ /static/admin/ {
+        proxy_pass http://localhost:8009/static/admin/;
+    }
+
+    location ^~ /static/jsoneditor/ {
+        proxy_pass http://localhost:8009/static/jsoneditor/;
+    }
+
+    location ^~ /static/django-jsoneditor/ {
+        proxy_pass http://localhost:8009/static/django-jsoneditor/;
+    }
+
+    location ~* \.(html)$ {
+    }
+
+    location ^~ /onlyofficeplugin/ {
+        autoindex  on;
+        proxy_pass http://localhost:8029;
+    }
+
+    # front end
+    location / {
+        try_files       $uri $uri.html =404;
+    }
+}
+</pre></div>
+</td></tr></table>
+
+<ol>
+<li>配置前端 urls.js</li>
+</ol>
+<p>前端需要的后端接口地址, 统一写在 <code>frontend/dist/static/js/common/urls.template</code> 中. 我们需要将 <code>urls.template</code> 中的相关地址替换后, <strong>另存为</strong> <code>frontend/dist/static/js/common/urls.js</code>. </p>
+<blockquote>
+<p>在自动部署时, docker 会根据指定的地址, 通过 <code>urls.template</code> 文件生成 <code>urls.js</code> 文件, 因此
+1. 不能删除 <code>urls.template</code> 文件
+2. 当相应接口有更改时, 必须修改 <code>urls.template</code> 文件
+</p>
+</blockquote>
+<ol>
+<li>检查 Nginx 配置, 启动 Nginx (Ubuntu)</li>
+</ol>
+<ul>
+<li><code>sudo nginx -t</code> - 检查 Nginx 配置</li>
+<li><code>sudo service nginx start</code> - 启动 Nginx </li>
+</ul>
+<ol>
+<li>访问 <code>http://&lt;server_name&gt;:&lt;listen&gt;/</code> 地址, 测试是否能够使用.</li>
+</ol>
+<h3 id="2">2. 后端<a class="headerlink" href="#2" title="Permanent link"></a></h3>
+<ol>
+<li>启动依赖的服务</li>
+</ol>
+<p>部署后端前, 应该首先安装或使用 Docker 运行 Minio, MySQL 5.7, Redisearch, OnlyOffice documentserver 这四项服务.</p>
+<ol>
+<li>安装 DocxFactory</li>
+</ol>
+<p>如果是在 Linux 上安装, 假设 <code>${BACKEND}</code> 是后端代码地址</p>
+<ul>
+<li><code>cd ${BACKEND}/resources/docxfactory</code></li>
+<li><code>sudo bash ./install.sh</code></li>
+</ul>
+<p>然后根据输出的日志, 检查是否安装成功.</p>
+<p>如果是在 Windows 上安装, 请阅读 wssc_resources 仓库 <code>resources/docxfactory/docx_factory_install_n_tutorial.pdf</code>, 按照文档中给出的步骤安装.</p>
+<ol>
+<li>安装其他 Python 包依赖</li>
+</ol>
+<p><code>pip3 install -r ${BACKEND}/requirements.txt</code></p>
+<ol>
+<li>编辑配置文件</li>
+</ol>
+<p>我们是通过环境变量的方式指定各种配置的. 在本代码仓库中, 有一个用于本地开发的脚本文件: <code>${BACKEND}/dev_env.sh</code>. 编辑该文件, 将各服务的 IP 地址进行替换. 然后通过 </p>
+<p><code>source ${BACKEND}/dev_env.sh</code> 来使这些环境变量生效.</p>
+<ol>
+<li>迁移数据库</li>
+</ol>
+<ul>
+<li><code>python3 manage.py makemigrations</code></li>
+<li><code>python3 manage.py migrate</code></li>
+</ul>
+<ol>
+<li>启动开发服务器</li>
+</ol>
+<p>注意, 开发服务器应该运行在上一节 Nginx 配置后端服务指定的端口上.</p>
+<p><code>python3 manage.py runserver 0.0.0.0:&lt;IP&gt;</code></p>
+<h2 id="2_1">2. 手动安装各服务时的参考<a class="headerlink" href="#2_1" title="Permanent link"></a></h2>
+<p>仅供参考, 不建议使用</p>
+<h2 id="1_2">1. 说明<a class="headerlink" href="#1_2" title="Permanent link"></a></h2>
 <p>应用服务器运行在 8009 端口. 默认安装位置是 <code>~/sites/WenShuShengCheng/</code>
 onlyoffice 文档服务器运行在 8019 端口. 默认安装位置是 <code>~/sites/minio/</code>
 minio 对象存储运行在 8029 端口. 默认安装位置是 <code>~/sites/onlyoffice/documentserver/</code></p>
-<h2 id="2">2. 安装步骤<a class="headerlink" href="#2" title="Permanent link"></a></h2>
+<h2 id="2_2">2. 安装步骤<a class="headerlink" href="#2_2" title="Permanent link"></a></h2>
 <h3 id="1-docker-mysql-57-uwsgi-nginx-supervisord101-python3">1. 安装 docker, mysql 5.7, uwsgi, nginx, supervisord(10.1), python3 环境<a class="headerlink" href="#1-docker-mysql-57-uwsgi-nginx-supervisord101-python3" title="Permanent link"></a></h3>
 <ol>
 <li>
 <p>需要特别注意的是: </p>
 <p>当 Django 项目激活 <code>USE_TZ</code> 选项时, 要想对 <code>DateTimeField</code> 的时间作查找, mysql 需要添加时区信息. 首先 pip 安装 <code>pytz</code>, 然后执行:</p>
-<div class="codehilite"><pre>sudo mysql_tzinfo_to_sql /usr/share/zoneinfo/ | mysql -u &lt;username&gt; -p &lt;password&gt; mysql
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1</pre></div></td><td class="code"><div class="codehilite"><pre>sudo mysql_tzinfo_to_sql /usr/share/zoneinfo/ | mysql -u &lt;username&gt; -p &lt;password&gt; mysql
 </pre></div>
+</td></tr></table>
 
 </li>
 </ol>
@@ -1076,15 +1277,31 @@ minio 对象存储运行在 8029 端口. 默认安装位置是 <code>~/sites/onl
 <ol>
 <li>
 <p>创建文件夹:</p>
-<div class="codehilite"><pre># ~/sites/onlyoffice 是自定义的文件夹, 可以修改
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3</pre></div></td><td class="code"><div class="codehilite"><pre># ~/sites/onlyoffice 是自定义的文件夹, 可以修改
 
 mkdir -p ~/sites/onlyoffice/documentserver
 </pre></div>
+</td></tr></table>
 
 </li>
 <li>
 <p>使用 docker 运行: </p>
-<div class="codehilite"><pre># 复制下方命令
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14</pre></div></td><td class="code"><div class="codehilite"><pre># 复制下方命令
 sudo docker run -i -t -d -p 8019:80 --restart=always -v ~/sites/onlyoffice/documentserver/logs:/var/log/onlyoffice  -v ~/sites/onlyoffice/documentserver/data:/var/www/onlyoffice/Data  -v ~/sites/onlyoffice/documentserver/lib:/var/lib/onlyoffice -v ~/sites/onlyoffice/documentserver/db:/var/lib/postgresql -v ~/sites/onlyoffice/documentserver/fonts:/usr/share/fonts -v ~/sites/onlyoffice/documentserver/mydata:/mydata onlyoffice/documentserver
 
 # 便于查看的形式
@@ -1099,6 +1316,7 @@ sudo docker run -i -t -d -p 8019:80 --restart=always
 # 本机开发的
 sudo docker run -i -t -d -p 8019:80 --restart=always -v /home/pw/workspace/docserver/_onlyoffice/documentserver/logs:/var/log/onlyoffice -v /home/pw/workspace/docserver/_onlyoffice/documentserver/data:/var/www/onlyoffice/Data -v /home/pw/workspace/docserver/_onlyoffice/documentserver/lib:/var/lib/onlyoffice -v /home/pw/workspace/docserver/_onlyoffice/documentserver/db:/var/lib/postgresql -v /home/pw/workspace/docserver/_onlyoffice/documentserver/fonts:/usr/share/fonts -v /home/pw/workspace/docserver/_onlyoffice/documentserver/mydata:/mydata onlyoffice/documentserver
 </pre></div>
+</td></tr></table>
 
 <p>其中, </p>
 <ul>
@@ -1114,7 +1332,24 @@ sudo docker run -i -t -d -p 8019:80 --restart=always -v /home/pw/workspace/docse
 </li>
 <li>
 <p>为 document server 安装中文字体.</p>
-<div class="codehilite"><pre># 首先将中文字体复制到字体文件夹下
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18</pre></div></td><td class="code"><div class="codehilite"><pre># 首先将中文字体复制到字体文件夹下
 cp -r ~/sites/WenShuShengCheng/resources/packages/zh-fonts ~/sites/onlyoffice/documentserver/fonts
 
 # 登入容器终端
@@ -1133,6 +1368,7 @@ sudo docker exec -it &lt;container ID&gt; /bin/bash
     onlyoffice-documentserver:converter: stopped
     onlyoffice-documentserver:converter: started
 </pre></div>
+</td></tr></table>
 
 <blockquote>
 <p>onlyoffice 在 docker 内的安装路径位于 <code>/var/www/onlyoffice</code></p>
@@ -1146,18 +1382,24 @@ sudo docker exec -it &lt;container ID&gt; /bin/bash
 <ol>
 <li>
 <p>将 <code>DocxFactoryLinux64.tar.gz</code> 解压至 <code>/opt</code> 文件夹: </p>
-<div class="codehilite"><pre># ~/sites/WenShuShengCheng/resources/packages/ 文件夹中有该文件
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3</pre></div></td><td class="code"><div class="codehilite"><pre># ~/sites/WenShuShengCheng/resources/packages/ 文件夹中有该文件
 
 sudo tar -zxvf ~/sites/WenShuShengCheng/resources/packages/DocxFactoryLinux64.tar.gz -C /opt
 </pre></div>
+</td></tr></table>
 
 </li>
 <li>
 <p>将 <code>DocxFactory/lib</code> 文件夹加入库搜索目录:</p>
-<div class="codehilite"><pre>sudo echo /opt/DocxFactory/lib/ &gt; /etc/ld.so.conf.d/DocxFactory.conf
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3</pre></div></td><td class="code"><div class="codehilite"><pre>sudo echo /opt/DocxFactory/lib/ &gt; /etc/ld.so.conf.d/DocxFactory.conf
 sudo chmod 666 /etc/ld.so.conf.d/DocxFactory.conf
 ldconfig
 </pre></div>
+</td></tr></table>
 
 <blockquote>
 <p>如果 gcc 报错, 安装 <code>gcc-c++</code> 环境 或 <code>g++</code> 环境
@@ -1169,19 +1411,38 @@ DocxFactory 尽量安装在 /opt 文件夹下, 否则 docxfactory 包无法导�
 </li>
 </ol>
 <p><em>使用 venv 时, 只要系统中已经安装过 DocxFactory, 只需要使用 venv 内的 python 解释器执行以下命令即可</em></p>
-<div class="codehilite"><pre>```
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5
+6</pre></div></td><td class="code"><div class="codehilite"><pre>```
 cd /opt/DocxFactory/python
 python3 setup.py install
 ```
 
 &gt; 需要安装 `python3-devel` 依赖来编译 python 模块.
 </pre></div>
-
+</td></tr></table>
 
 <ol>
 <li>
 <p>测试 DocxFactory 模块是否安装成功</p>
-<div class="codehilite"><pre>python3
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15</pre></div></td><td class="code"><div class="codehilite"><pre>python3
 &gt; from docxfactory import WordProcessingCompiler
 
 # 导入成功即表明安装成功
@@ -1197,32 +1458,60 @@ python3 setup.py install
 
 # 原因即是 缺乏依赖 libxt-dev. apt 安装即可.
 </pre></div>
+</td></tr></table>
 
 </li>
 </ol>
 <h3 id="4-python">4. 安装 python 模块<a class="headerlink" href="#4-python" title="Permanent link"></a></h3>
-<div class="codehilite"><pre>```
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4</pre></div></td><td class="code"><div class="codehilite"><pre>```
 cd ~/sites/WenShuShengCheng/
 pip3 install -r requirements.txt
 ```
 </pre></div>
-
+</td></tr></table>
 
 <h3 id="5-minio">5. 安装 minio 并测试<a class="headerlink" href="#5-minio" title="Permanent link"></a></h3>
 <ol>
 <li>
 <p>下载可执行文件: </p>
-<div class="codehilite"><pre># 这里的 ~/sites/minio/ 是自定义的文件夹, 可以修改
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5</pre></div></td><td class="code"><div class="codehilite"><pre># 这里的 ~/sites/minio/ 是自定义的文件夹, 可以修改
 
 mkdir ~/sites/minio
 cd ~/sites/minio/
 wget https://dl.minio.io/server/minio/release/linux-amd64/minio
 </pre></div>
+</td></tr></table>
 
 </li>
 <li>
 <p>更新配置文件, 需要修改配置中的用户名, 密码与应用服务器地址.</p>
-<div class="codehilite"><pre>cp ~/sites/WenShuShengCheng/resources/packages/config.json ~/sites/minio/config.json
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20</pre></div></td><td class="code"><div class="codehilite"><pre>cp ~/sites/WenShuShengCheng/resources/packages/config.json ~/sites/minio/config.json
 
 vi ~/sites/minio/config.json
 
@@ -1243,11 +1532,29 @@ vi ~/sites/minio/config.json
         }
     },
 </pre></div>
+</td></tr></table>
 
 </li>
 <li>
 <p>赋予权限, 启动并测试: </p>
-<div class="codehilite"><pre>chmod +x ./minio
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18</pre></div></td><td class="code"><div class="codehilite"><pre>chmod +x ./minio
 
 # minio 的默认配置文件是 ~/.minio/config.json
 # 指定配置文件地址 (-config-dir 或 -C. 这里目前使用的是默认配置), 端口地址 (--address), 数据保存地址. 
@@ -1266,11 +1573,21 @@ sudo ./minio server -C ~/sites/minio/ --address :8029 ~/sites/minio/data/
 
     # 接下来是一些使用方法
 </pre></div>
+</td></tr></table>
 
 </li>
 <li>
 <p>开启一个新的终端, 安装 mc 并启动:</p>
-<div class="codehilite"><pre>cd ~/sites/minio/
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10</pre></div></td><td class="code"><div class="codehilite"><pre>cd ~/sites/minio/
 wget https://dl.minio.io/client/mc/release/linux-amd64/mc
 
 chmod +x ./mc
@@ -1281,6 +1598,7 @@ chmod +x ./mc
 
 # 查看帮助: ./mc --help
 </pre></div>
+</td></tr></table>
 
 </li>
 <li>
@@ -1297,7 +1615,16 @@ chmod +x ./mc
 <li>配置数据库用户名和密码</li>
 <li>
 <p>配置各服务地址:</p>
-<div class="codehilite"><pre># 这里的 ip 不能使用 localhost, 或 127.0.0.1 或 0.0.0.0
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10</pre></div></td><td class="code"><div class="codehilite"><pre># 这里的 ip 不能使用 localhost, 或 127.0.0.1 或 0.0.0.0
 
 LOCAL_HOST = &#39;ip:8009&#39;
 ONLYOFFICE_HOST = &#39;ip:8019&#39;
@@ -1308,6 +1635,7 @@ MINIO_HOST = &#39;ip:8029&#39;
 MINIO_ACCESS_KEY = &#39;minio&#39;
 MINIO_SECRET_KEY = &#39;minio123&#39;
 </pre></div>
+</td></tr></table>
 
 </li>
 </ol>
@@ -1315,7 +1643,14 @@ MINIO_SECRET_KEY = &#39;minio123&#39;
 <ol>
 <li>
 <p>配置应用服务器安装位置, minio 安装位置和 python 编译器命令:</p>
-<div class="codehilite"><pre># 以下是默认位置. 如果不需要修改退出即可.
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5
+6
+7
+8</pre></div></td><td class="code"><div class="codehilite"><pre># 以下是默认位置. 如果不需要修改退出即可.
 
 workspace=&quot;~/sites/WenShuShengCheng&quot;
 minioDir=&quot;~/sites/minio&quot;
@@ -1324,29 +1659,46 @@ workingPython=&quot;/usr/local/python35/bin/python3.5&quot;       # 可能需要
 # 如果使用 venv, 修改 workingPython如下
 #workingPython=&quot;${workspace}/venv/bin/python3&quot;
 </pre></div>
+</td></tr></table>
 
 </li>
 </ol>
 <h3 id="7">7. 创建数据库<a class="headerlink" href="#7" title="Permanent link"></a></h3>
-<div class="codehilite"><pre>```
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4</pre></div></td><td class="code"><div class="codehilite"><pre>```
 CREATE DATABASE docserver CHARSET=&quot;utf8&quot;;
 SHOW DATABASES;
 ```
 </pre></div>
-
+</td></tr></table>
 
 <h3 id="8">8. 迁移数据库, 启动开发服务器<a class="headerlink" href="#8" title="Permanent link"></a></h3>
-<div class="codehilite"><pre>```
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5
+6</pre></div></td><td class="code"><div class="codehilite"><pre>```
 python3 ~/sites/WenShuShengCheng/manage.py makemigrations
 python3 ~/sites/WenShuShengCheng/manage.py migrate
 
 sudo bash ~/sites/WenShuShengCheng/resources/tools/dev.sh
 ```
 </pre></div>
-
+</td></tr></table>
 
 <h3 id="9">9. 填充默认的案件阶段数据, 以及管理员用户信息.<a class="headerlink" href="#9" title="Permanent link"></a></h3>
-<div class="codehilite"><pre>```
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5
+6
+7
+8
+9</pre></div></td><td class="code"><div class="codehilite"><pre>```
 python3 ~/sites/WenShuShengCheng/manage.py loaddata main_stages.json auth_superuser.json
 
 # 添加的管理员信息如下:
@@ -1356,14 +1708,26 @@ python3 ~/sites/WenShuShengCheng/manage.py loaddata main_stages.json auth_superu
 # first_name: &#39;管理员&#39;
 ```
 </pre></div>
-
+</td></tr></table>
 
 <h3 id="9-httpip8009login">9. 访问服务器地址 <code>http://ip:8009/login/</code> 登录测试<a class="headerlink" href="#9-httpip8009login" title="Permanent link"></a></h3>
 <h3 id="10">10. 配置服务器<a class="headerlink" href="#10" title="Permanent link"></a></h3>
 <h4 id="101-uwsgi">10.1 安装 uwsgi<a class="headerlink" href="#101-uwsgi" title="Permanent link"></a></h4>
 <p>服务器存在多个版本的 python.  如果python 2.7 不会用来运行 uwsgi, 那么可以直接使用 <code>pip3 install uwsgi</code>.</p>
 <p>否则如果有多个版本的 uwsgi 安装在服务器上, 需要手动编译 uwsgi 源码:</p>
-<div class="codehilite"><pre>```
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13</pre></div></td><td class="code"><div class="codehilite"><pre>```
 cd ~/download
 
 wget https://pypi.python.org/packages/7d/11/2b1d3c88fda1049eb5ac8930f7622c29665bea04241fe0f28ff89436bae2/uwsgi-2.0.16.tar.gz#md5=efa3adb73b99f7f7914ca47bcddcf184
@@ -1377,19 +1741,31 @@ UWSGI_BIN_NAME=/usr/bin/uwsgi_python3 python3 uwsgiconfig.py --build
 # 而后在运行 uwsgi 时, 使用 /usr/bin/uwsgi_python3
 ```
 </pre></div>
-
+</td></tr></table>
 
 <h4 id="102-uwsgi">10.2 配置 uwsgi 配置<a class="headerlink" href="#102-uwsgi" title="Permanent link"></a></h4>
 <ol>
 <li>
 <p>安装 uwsgi python3 插件</p>
-<div class="codehilite"><pre>sudo apt install uwsgi-plugin-python3
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1</pre></div></td><td class="code"><div class="codehilite"><pre>sudo apt install uwsgi-plugin-python3
 </pre></div>
+</td></tr></table>
 
 </li>
 <li>
 <p>编辑配置文件 <code>/root/sites/WenShuShengCheng.ini</code></p>
-<div class="codehilite"><pre>[uwsgi]
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12</pre></div></td><td class="code"><div class="codehilite"><pre>[uwsgi]
 chdir=/root/sites/WenShuShengCheng
 socket=/var/run/WenShuShengCheng.sock
 chmod-socket=666
@@ -1402,17 +1778,31 @@ processes=4
 daemonize=/var/log/uwsgi/WenShuShengCheng.log
 plugins=python3
 </pre></div>
+</td></tr></table>
 
 </li>
 <li>
 <p>运行测试:</p>
-<div class="codehilite"><pre>uwsgi -i /root/sites/WenShuShengCheng.ini
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1</pre></div></td><td class="code"><div class="codehilite"><pre>uwsgi -i /root/sites/WenShuShengCheng.ini
 </pre></div>
+</td></tr></table>
 
 </li>
 </ol>
 <h4 id="102-supervisord">10.2 安装 supervisord<a class="headerlink" href="#102-supervisord" title="Permanent link"></a></h4>
-<div class="codehilite"><pre>```
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13</pre></div></td><td class="code"><div class="codehilite"><pre>```
 cd ~/download/          # 下载文件夹, 可以修改
 
 # 下载源码包
@@ -1426,10 +1816,43 @@ cd ./supervisor-3.3.4/
 python setup.py install 
 ```
 </pre></div>
-
+</td></tr></table>
 
 <h4 id="103-supervisord">10.3 配置 supervisord<a class="headerlink" href="#103-supervisord" title="Permanent link"></a></h4>
-<div class="codehilite"><pre>日志文件的位置可以修改, 如果文件不存在需要提前创建. 这里的日志文件有:
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34</pre></div></td><td class="code"><div class="codehilite"><pre>日志文件的位置可以修改, 如果文件不存在需要提前创建. 这里的日志文件有:
 
     - /root/sites/WenShuShengCheng/logs/minio/debug.log
     - /root/sites/logs/WenShuShengCheng-error.log
@@ -1464,7 +1887,7 @@ stderr_logfile=/root/sites/logs/WenShuShengCheng-error.log
 stdout_logfile=/root/sites/logs/WenShuShengCheng.log
 ```
 </pre></div>
-
+</td></tr></table>
 
 <h4 id="104-supervisord">10.4 测试 supervisord<a class="headerlink" href="#104-supervisord" title="Permanent link"></a></h4>
 <ol>
@@ -1475,7 +1898,14 @@ stdout_logfile=/root/sites/logs/WenShuShengCheng.log
 <ul>
 <li>
 <p><code>/etc/nginx/sites-available/minio</code></p>
-<div class="codehilite"><pre>server {
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5
+6
+7
+8</pre></div></td><td class="code"><div class="codehilite"><pre>server {
     listen 8029;
     server_name &lt;ip&gt;;
     location / {
@@ -1484,6 +1914,7 @@ stdout_logfile=/root/sites/logs/WenShuShengCheng.log
     }
 }
 </pre></div>
+</td></tr></table>
 
 </li>
 <li>
@@ -1491,7 +1922,35 @@ stdout_logfile=/root/sites/logs/WenShuShengCheng.log
 <blockquote>
 <p>可能需要修改 python site-packages 路径, 可以使用 <code>pip3 show django</code> 查看.</p>
 </blockquote>
-<div class="codehilite"><pre>server {
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29</pre></div></td><td class="code"><div class="codehilite"><pre>server {
     listen      8009;
     server_name &lt;ip&gt;;
     client_max_body_size    10m;
@@ -1521,11 +1980,19 @@ stdout_logfile=/root/sites/logs/WenShuShengCheng.log
     charset utf-8;
 }
 </pre></div>
+</td></tr></table>
 
 </li>
 <li>
 <p><code>/etc/nginx/sites-available/onlyoffice</code></p>
-<div class="codehilite"><pre>server {
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5
+6
+7
+8</pre></div></td><td class="code"><div class="codehilite"><pre>server {
     listen 8019;
     server_name &lt;ip&gt;;
     location / {
@@ -1534,14 +2001,18 @@ stdout_logfile=/root/sites/logs/WenShuShengCheng.log
     }
 }
 </pre></div>
+</td></tr></table>
 
 </li>
 <li>
 <p>启动 nginx</p>
-<div class="codehilite"><pre>sudo service nginx configtest
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3</pre></div></td><td class="code"><div class="codehilite"><pre>sudo service nginx configtest
 sudo service nginx reload 
 sudo service nginx status
 </pre></div>
+</td></tr></table>
 
 </li>
 </ul>
@@ -1576,235 +2047,5 @@ sudo service nginx status
 <blockquote>
 <p><strong>优点是编辑体验好, 可以在线制作模板, 缺点是客户本地需要安装 office 软件(?).</strong></p>
 </blockquote>
-</li>
-</ul>
-<h2 id="4">4. 权限设计<a class="headerlink" href="#4" title="Permanent link"></a></h2>
-<h3 id="41">4.1 需要控制权限的模型/对象, 及对应的权限<a class="headerlink" href="#41" title="Permanent link"></a></h3>
-<ul>
-<li>account<ul>
-<li><code>account.court</code><ul>
-<li><code>add_court</code></li>
-<li><code>change_court_global</code></li>
-<li><code>change_court_local</code></li>
-<li>*<code>delete_court</code></li>
-</ul>
-</li>
-<li><code>account.department</code><ul>
-<li><code>add_department_global</code></li>
-<li><code>add_department_local</code></li>
-<li><code>change_department_global</code></li>
-<li><code>change_department_local</code></li>
-<li><code>delete_department_global</code></li>
-<li><code>delete_department_local</code></li>
-</ul>
-</li>
-<li><code>account.role</code><ul>
-<li><code>add_role_global</code></li>
-<li>*<code>add_role_local</code></li>
-<li><code>change_role_global</code></li>
-<li>*<code>change_role_local</code></li>
-</ul>
-</li>
-<li><code>account.profile</code> (<code>user</code>)<ul>
-<li><code>add_user</code></li>
-<li><code>change_user</code></li>
-<li><code>delete_user</code></li>
-</ul>
-</li>
-<li><code>account.position</code><ul>
-<li><code>add_position</code></li>
-<li><code>change_position</code></li>
-<li><code>deletes_position</code></li>
-</ul>
-</li>
-</ul>
-</li>
-<li>history<ul>
-<li><code>history.operationhistory</code><ul>
-<li><code>view_history</code></li>
-</ul>
-</li>
-</ul>
-</li>
-<li>
-<p>main</p>
-<ul>
-<li>
-<p><code>main.case</code></p>
-<ul>
-<li>
-<p>self</p>
-<ul>
-<li><code>view_case_info</code></li>
-<li><code>view_case_dossier</code></li>
-<li><code>view_case_doc</code></li>
-<li>
-<p><code>view_case_collect_info</code></p>
-</li>
-<li>
-<p><code>change_case_info</code></p>
-</li>
-<li><code>change_case_dossier</code></li>
-<li><code>change_case_doc</code></li>
-<li>
-<p><code>change_case_collect_info</code></p>
-</li>
-<li>
-<p><code>delete_case_dossier</code></p>
-</li>
-<li><code>delete_case_doc</code></li>
-<li>
-<p><code>delete_case_collect_info</code></p>
-</li>
-<li>
-<p><code>create_case_dossier</code></p>
-</li>
-<li><code>create_case_doc</code></li>
-<li><code>create_case_collect_info</code></li>
-</ul>
-</li>
-<li>
-<p>in_dept</p>
-<ul>
-<li><code>view_case_info_in_dept</code></li>
-<li><code>view_case_dossier_in_dept</code></li>
-<li><code>view_case_doc_in_dept</code></li>
-<li>
-<p><code>view_case_collected_doc_in_dept</code></p>
-</li>
-<li>
-<p><code>change_case_info_in_dept</code></p>
-</li>
-<li><code>change_case_dossier_in_dept</code></li>
-<li><code>change_case_doc_in_dept</code></li>
-<li>
-<p><code>change_case_collect_info_in_dept</code></p>
-</li>
-<li>
-<p><code>delete_case_dossier_in_dept</code></p>
-</li>
-<li><code>delete_case_doc_in_dept</code></li>
-<li>
-<p><code>delete_case_collect_info_in_dept</code></p>
-</li>
-<li>
-<p><code>create_case_dossier_in_dept</code></p>
-</li>
-<li><code>create_case_doc_in_dept</code></li>
-<li><code>create_case_collect_info_in_dept</code></li>
-</ul>
-</li>
-<li>
-<p>child_dept</p>
-<ul>
-<li><code>view_case_info_child_dept</code></li>
-<li><code>view_case_dossier_child_dept</code></li>
-<li><code>view_case_doc_child_dept</code></li>
-<li>
-<p><code>view_case_collected_doc_child_dept</code></p>
-</li>
-<li>
-<p><code>change_case_info_child_dept</code></p>
-</li>
-<li><code>change_case_dossier_child_dept</code></li>
-<li><code>change_case_doc_child_dept</code></li>
-<li>
-<p><code>change_case_collected_doc_child_dept</code></p>
-</li>
-<li>
-<p><code>delete_case_dossier_child_dept</code></p>
-</li>
-<li><code>delete_case_doc_child_dept</code></li>
-<li>
-<p><code>delete_case_collected_doc_child_dept</code></p>
-</li>
-<li>
-<p><code>create_case_dossier_child_dept</code></p>
-</li>
-<li><code>create_case_doc_child_dept</code></li>
-<li><code>create_case_collect_info_child_dept</code></li>
-</ul>
-</li>
-<li>
-<p>in_court</p>
-<ul>
-<li><code>view_case_info_in_court</code></li>
-<li><code>view_case_dossier_in_court</code></li>
-<li><code>view_case_doc_in_court</code></li>
-<li>
-<p><code>view_case_collected_doc_in_court</code></p>
-</li>
-<li>
-<p><code>change_case_info_in_court</code></p>
-</li>
-<li><code>change_case_dossier_in_court</code></li>
-<li><code>change_case_doc_in_court</code></li>
-<li>
-<p><code>change_case_collected_doc_in_court</code></p>
-</li>
-<li>
-<p><code>delete_case_dossier_in_court</code></p>
-</li>
-<li><code>delete_case_doc_in_court</code></li>
-<li>
-<p><code>delete_case_collected_doc_in_court</code></p>
-</li>
-<li>
-<p><code>create_case_dossier_in_court</code></p>
-</li>
-<li><code>create_case_doc_in_court</code></li>
-<li><code>create_case_collect_info_in_court</code></li>
-</ul>
-</li>
-<li>
-<p>child_court</p>
-<ul>
-<li><code>view_case_info_child_court</code></li>
-<li><code>view_case_dossier_child_court</code></li>
-<li><code>view_case_doc_child_court</code></li>
-<li>
-<p><code>view_case_collected_doc_child_court</code></p>
-</li>
-<li>
-<p><code>change_case_info_child_court</code></p>
-</li>
-<li><code>change_case_dossier_child_court</code></li>
-<li><code>change_case_doc_child_court</code></li>
-<li>
-<p><code>change_case_collected_doc_child_court</code></p>
-</li>
-<li>
-<p><code>delete_case_dossier_child_court</code></p>
-</li>
-<li><code>delete_case_doc_child_court</code></li>
-<li>
-<p><code>delete_case_collected_doc_child_court</code></p>
-</li>
-<li>
-<p><code>create_case_dossier_child_court</code></p>
-</li>
-<li><code>create_case_doc_child_court</code></li>
-<li><code>create_case_collect_info_child_court</code></li>
-</ul>
-</li>
-</ul>
-</li>
-<li>
-<p><code>main.tag</code></p>
-<ul>
-<li><code>add_tag</code></li>
-<li><code>change_tag</code></li>
-<li><code>delete_tag</code></li>
-</ul>
-</li>
-<li>
-<p><code>main.stage</code></p>
-</li>
-<li><code>main.doc</code></li>
-<li><code>main.template</code></li>
-<li><code>main.collectedcase</code></li>
-<li><code>main.uniquecoderule</code></li>
-<li>*<code>main.complaint</code></li>
-</ul>
 </li>
 </ul></article></body></html>
