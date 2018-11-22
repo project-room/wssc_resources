@@ -1057,9 +1057,7 @@ body .markdown-body
 .codehilite .gc{color:#999;background-color:#EAF2F5}
 </style><title>项目文档</title></head><body><article class="markdown-body"><h2 id="1">1. 运行开发服务器<a class="headerlink" href="#1" title="Permanent link"></a></h2>
 <h3 id="1_1">1. 前端<a class="headerlink" href="#1_1" title="Permanent link"></a></h3>
-<ol>
-<li>配置 Nginx</li>
-</ol>
+<p>1.配置 Nginx</p>
 <p>前端需要通过 Nginx 进行反向代理和响应静态文件. 下面是一个完整的示例. 需要注意的部分有:</p>
 <ul>
 <li><code>listen</code> - Nginx 响应的端口.</li>
@@ -1199,9 +1197,7 @@ body .markdown-body
 </pre></div>
 </td></tr></table>
 
-<ol>
-<li>配置前端 urls.js</li>
-</ol>
+<p>2.配置前端 urls.js</p>
 <p>前端需要的后端接口地址, 统一写在 <code>frontend/dist/static/js/common/urls.template</code> 中. 我们需要将 <code>urls.template</code> 中的相关地址替换后, <strong>另存为</strong> <code>frontend/dist/static/js/common/urls.js</code>. </p>
 <blockquote>
 <p>在自动部署时, docker 会根据指定的地址, 通过 <code>urls.template</code> 文件生成 <code>urls.js</code> 文件, 因此
@@ -1209,24 +1205,16 @@ body .markdown-body
 2. 当相应接口有更改时, 必须修改 <code>urls.template</code> 文件
 </p>
 </blockquote>
-<ol>
-<li>检查 Nginx 配置, 启动 Nginx (Ubuntu)</li>
-</ol>
+<p>3.检查 Nginx 配置, 启动 Nginx (Ubuntu)</p>
 <ul>
 <li><code>sudo nginx -t</code> - 检查 Nginx 配置</li>
 <li><code>sudo service nginx start</code> - 启动 Nginx </li>
 </ul>
-<ol>
-<li>访问 <code>http://&lt;server_name&gt;:&lt;listen&gt;/</code> 地址, 测试是否能够使用. 如果返回 <code>403</code>, 检查 Nginx 对于 <code>root</code> 目录的访问权限, 检查 SELinux 设置, 检查防火墙设置.</li>
-</ol>
+<p>4.访问 <code>http://&lt;server_name&gt;:&lt;listen&gt;/</code> 地址, 测试是否能够使用. 如果返回 <code>403</code>, 检查 Nginx 对于 <code>root</code> 目录的访问权限, 检查 SELinux 设置, 检查防火墙设置.</p>
 <h3 id="2">2. 后端<a class="headerlink" href="#2" title="Permanent link"></a></h3>
-<ol>
-<li>启动依赖的服务</li>
-</ol>
+<p>1.启动依赖的服务</p>
 <p>部署后端前, 应该首先安装或使用 Docker 运行 Minio, MySQL 5.7, Redisearch, OnlyOffice documentserver 这四项服务.</p>
-<ol>
-<li>安装 DocxFactory</li>
-</ol>
+<p>2.安装 DocxFactory</p>
 <p>如果是在 Linux 上安装, 假设 <code>${BACKEND}</code> 是后端代码地址</p>
 <ul>
 <li><code>cd ${BACKEND}/resources/docxfactory</code></li>
@@ -1234,29 +1222,29 @@ body .markdown-body
 </ul>
 <p>然后根据输出的日志, 检查是否安装成功.</p>
 <p>如果是在 Windows 上安装, 请阅读 wssc_resources 仓库 <code>resources/docxfactory/docx_factory_install_n_tutorial.pdf</code>, 按照文档中给出的步骤安装.</p>
-<ol>
-<li>安装其他 Python 包依赖</li>
-</ol>
+<p>3.安装其他 Python 包依赖</p>
 <p><code>pip3 install -r ${BACKEND}/requirements.txt</code></p>
-<ol>
-<li>编辑配置文件</li>
-</ol>
+<p>4.编辑配置文件</p>
 <p>我们是通过环境变量的方式指定各种配置的. 在本代码仓库中, 有一个用于本地开发的脚本文件: <code>${BACKEND}/dev_env.sh</code>. 编辑该文件, 将各服务的 IP 地址进行替换. 然后通过 </p>
-<p><code>source ${BACKEND}/dev_env.sh</code> 来使这些环境变量生效.</p>
-<ol>
-<li>创建并迁移数据库</li>
-</ol>
+<p><code>source ${BACKEND}/dev_env.sh</code> 来使这些环境变量生效. 注意的是, 这样环境变量只在本终端有效, 重启终端或重启机器后, 都需要重新激活.</p>
+<p>5.创建并迁移数据库</p>
 <ul>
 <li><code>python3 manage.py makemigrations</code></li>
 <li><code>python3 manage.py migrate</code></li>
 </ul>
-<ol>
-<li>目录权限</li>
-</ol>
+<p>6.目录权限</p>
 <p>运行开发服务器的用户对 <code>/tmp</code> 目录需要有写入的权限.</p>
-<ol>
-<li>启动开发服务器</li>
-</ol>
+<p>7.启动开发服务器</p>
 <p>注意, 开发服务器应该运行在上一节 Nginx 配置后端服务指定的端口上.</p>
 <p><code>python3 manage.py runserver 0.0.0.0:&lt;IP&gt;</code></p>
+<p>8.启动 Celery worker</p>
+<p><strong>在一个新的终端中</strong>, 激活环境变量, 并启动 Celery worker:</p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3</pre></div></td><td class="code"><div class="codehilite"><pre>source ${BACKEND}/dev_env.sh
+
+celery worker -A app --loglevel=info
+</pre></div>
+</td></tr></table>
+
 <p>至此, 开发服务器应该成功启动. 下一步可以创建管理员用户.</p></article></body></html>
