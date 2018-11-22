@@ -1118,38 +1118,56 @@ body .markdown-body
 <ol>
 <li>
 <p>在 <code>/etc/docker</code> 下新建文件: <code>daemon.json</code>:</p>
-<div class="codehilite"><pre><span class="c1"># 新建文件</span>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2</pre></div></td><td class="code"><div class="codehilite"><pre><span class="c1"># 新建文件</span>
 sudo vi /etc/docker/daemon.json
 </pre></div>
+</td></tr></table>
 
 </li>
 <li>
 <p>在 json 文件中添加数据:</p>
-<div class="codehilite"><pre><span class="p">{</span>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5</pre></div></td><td class="code"><div class="codehilite"><pre><span class="p">{</span>
     <span class="nt">&quot;insecure-registries&quot;</span><span class="p">:</span> <span class="p">[</span>
         <span class="s2">&quot;176.122.188.100:16000&quot;</span>
     <span class="p">]</span>
 <span class="p">}</span>
 </pre></div>
+</td></tr></table>
 
 </li>
 <li>
 <p>保存新的配置后重启 docker (如果是在同一台服务器上, 确保私有仓库容器正在运行)</p>
-<div class="codehilite"><pre>sudo service docker restart
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1</pre></div></td><td class="code"><div class="codehilite"><pre>sudo service docker restart
 </pre></div>
+</td></tr></table>
 
 </li>
 </ol>
 <h4 id="41-docker">4.1 拉取应用的 docker 镜像<a class="headerlink" href="#41-docker" title="Permanent link"></a></h4>
-<div class="codehilite"><pre>sudo docker pull 176.122.188.100:16000/wssc-master:latest
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1</pre></div></td><td class="code"><div class="codehilite"><pre>sudo docker pull 176.122.188.100:16000/wssc-master:latest
 </pre></div>
+</td></tr></table>
 
 <h4 id="42">4.2 运行各服务<a class="headerlink" href="#42" title="Permanent link"></a></h4>
 <blockquote>
 <p>按照下列顺序依次运行镜像</p>
 </blockquote>
 <p>4.2.1 运行 minio 对象存储服务</p>
-<div class="codehilite"><pre>sudo docker run -di <span class="se">\</span>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10</pre></div></td><td class="code"><div class="codehilite"><pre>sudo docker run -di <span class="se">\</span>
     -p 8029:9000 <span class="se">\</span>
     --name<span class="o">=</span>minio <span class="se">\</span>
     --restart<span class="o">=</span>always <span class="se">\</span>
@@ -1160,6 +1178,7 @@ sudo vi /etc/docker/daemon.json
     -v /var/www/minio/exchange:/exchange <span class="se">\</span>
     minio/minio server -C /config /data
 </pre></div>
+</td></tr></table>
 
 <p>说明:</p>
 <blockquote>
@@ -1176,20 +1195,33 @@ sudo vi /etc/docker/daemon.json
 </ol>
 </blockquote>
 <p>4.2.2 运行 MySQL 5.7 数据库服务</p>
-<div class="codehilite"><pre>sudo docker run -di <span class="se">\</span>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13</pre></div></td><td class="code"><div class="codehilite"><pre>sudo docker run -di <span class="se">\</span>
     --name mysql57 <span class="se">\</span>
     --restart<span class="o">=</span>always <span class="se">\</span>
     -v /var/www/mysql:/var/lib/mysql <span class="se">\</span>
-    -e <span class="nv">MYSQL_ROOT_PASSWORD</span><span class="o">=</span>root <span class="se">\</span>
+    -e <span class="nv">MYSQL_ROOT_PASSWORD</span><span class="o">=</span>Zopen2013 <span class="se">\</span>
     -p 13306:3306 <span class="se">\</span>
     mysql:5.7
 
-<span class="c1"># 创建数据库</span>
-sudo docker <span class="nb">exec</span> -it mysql57 mysql -uroot -proot -e <span class="s2">&quot;create database wssc charset=&#39;utf8&#39;;&quot;</span>
+<span class="c1"># 稍候片刻, 等待数据库启动后, 创建数据库</span>
+sudo docker <span class="nb">exec</span> -it mysql57 mysql -uroot -pZopen2013 -e <span class="s2">&quot;create database wssc charset=&#39;utf8&#39;;&quot;</span>
 
 <span class="c1"># 查看数据库是否创建成功</span>
-sudo docker <span class="nb">exec</span> -it mysql57 mysql -uroot -proot -e <span class="s2">&quot;show databases;&quot;</span>
+sudo docker <span class="nb">exec</span> -it mysql57 mysql -uroot -pZopen2013 -e <span class="s2">&quot;show databases;&quot;</span>
 </pre></div>
+</td></tr></table>
 
 <p>说明:</p>
 <blockquote>
@@ -1201,7 +1233,7 @@ sudo docker <span class="nb">exec</span> -it mysql57 mysql -uroot -proot -e <spa
 <p>数据文件在服务器上的保存位置是 <code>/var/www/mysql</code></p>
 </li>
 <li>
-<p>数据库 root 用户密码是 <code>root</code></p>
+<p>数据库 root 用户密码是 <code>Zopen2013</code></p>
 </li>
 <li>
 <p>创建的数据库名称为 <code>wssc</code></p>
@@ -1209,7 +1241,16 @@ sudo docker <span class="nb">exec</span> -it mysql57 mysql -uroot -proot -e <spa
 </ol>
 </blockquote>
 <p>4.2.3 运行 OnlyOffice 文档编辑服务</p>
-<div class="codehilite"><pre>sudo docker run -di <span class="se">\</span>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10</pre></div></td><td class="code"><div class="codehilite"><pre>sudo docker run -di <span class="se">\</span>
     -p 8019:80 <span class="se">\</span>
     --name<span class="o">=</span>onlyoffice <span class="se">\</span>
     --restart<span class="o">=</span>always <span class="se">\</span>
@@ -1220,6 +1261,7 @@ sudo docker <span class="nb">exec</span> -it mysql57 mysql -uroot -proot -e <spa
     -v /var/www/onlyoffice/documentserver/exchange:/exchange <span class="se">\</span>
     vadden/wssc_office
 </pre></div>
+</td></tr></table>
 
 <p>说明:</p>
 <blockquote>
@@ -1228,7 +1270,16 @@ sudo docker <span class="nb">exec</span> -it mysql57 mysql -uroot -proot -e <spa
 </ol>
 </blockquote>
 <p>4.2.4 运行 RediSearch Redis 服务</p>
-<div class="codehilite"><pre>sudo docker run -di <span class="se">\</span>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10</pre></div></td><td class="code"><div class="codehilite"><pre>sudo docker run -di <span class="se">\</span>
     --restart<span class="o">=</span>always <span class="se">\</span>
     --name<span class="o">=</span>rs <span class="se">\</span>
     -p 16379:6379 <span class="se">\</span>
@@ -1239,6 +1290,7 @@ sudo docker <span class="nb">exec</span> -it mysql57 mysql -uroot -proot -e <spa
     --aof-use-rdb-preamble yes <span class="se">\</span>
     --maxmemory-policy volatile-lru
 </pre></div>
+</td></tr></table>
 
 <blockquote>
 <p>本 redis 服务加载了 RediSearch 模块. RediSearch 命令过期时间设置为了 10000 ms, 配置使用 aof 文件, 配置了内存淘汰策略为 volatile-lru</p>
@@ -1247,7 +1299,24 @@ sudo docker <span class="nb">exec</span> -it mysql57 mysql -uroot -proot -e <spa
 </blockquote>
 <p>4.2.5 运行文书生成应用服务器</p>
 <p>1.准备一份 docker 环境变量的配置文件, 命名为 <code>env.list</code> 内容如下:</p>
-<div class="codehilite"><pre><span class="c1"># wssc 应用服务器相关配置</span>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18</pre></div></td><td class="code"><div class="codehilite"><pre><span class="c1"># wssc 应用服务器相关配置</span>
 <span class="nv">SERVER_ENV_MODE</span><span class="o">=</span>dev
 <span class="nv">SERVER_ENV_APP_IP</span><span class="o">=</span>&lt;ip&gt;
 <span class="nv">SERVER_ENV_APP_PORT</span><span class="o">=</span>&lt;port&gt;
@@ -1266,6 +1335,7 @@ sudo docker <span class="nb">exec</span> -it mysql57 mysql -uroot -proot -e <spa
 <span class="nv">SERVER_ENV_REDIS_HOST</span><span class="o">=</span>&lt;ip&gt;:&lt;port&gt;
 <span class="nv">SERVER_ENV_DOSSIER_HOST</span><span class="o">=</span>&lt;ip&gt;:&lt;port&gt;
 </pre></div>
+</td></tr></table>
 
 <p>2.按照下表各环境变量的说明配置 <code>env.list</code></p>
 <table>
@@ -1315,7 +1385,7 @@ sudo docker <span class="nb">exec</span> -it mysql57 mysql -uroot -proot -e <spa
 <tr>
 <td align="left"><code>SERVER_ENV_DB_PASS</code></td>
 <td align="left">数据库用户密码</td>
-<td align="left">默认是 <code>root</code></td>
+<td align="left">默认是 <code>Zopen2013</code></td>
 </tr>
 <tr>
 <td align="left"><code>SERVER_ENV_LOCAL_HOST</code></td>
@@ -1345,7 +1415,17 @@ sudo docker <span class="nb">exec</span> -it mysql57 mysql -uroot -proot -e <spa
 </tbody>
 </table>
 <p>3.运行以下命令, 注意是在 <code>env.list</code> 相同目录下:</p>
-<div class="codehilite"><pre><span class="c1"># 启动应用服务器</span>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11</pre></div></td><td class="code"><div class="codehilite"><pre><span class="c1"># 启动应用服务器</span>
 sudo docker run -itd <span class="se">\</span>
     --name<span class="o">=</span>wssc <span class="se">\</span>
     --restart<span class="o">=</span>always <span class="se">\</span>
@@ -1357,23 +1437,31 @@ sudo docker run -itd <span class="se">\</span>
     -v /var/www/project/data:/var/www/project/data <span class="se">\</span>
     176.122.188.100:16000/wssc-master:latest
 </pre></div>
+</td></tr></table>
 
 <p>4.检查容器日志</p>
-<div class="codehilite"><pre><span class="c1"># 查看服务器日志</span>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2</pre></div></td><td class="code"><div class="codehilite"><pre><span class="c1"># 查看服务器日志</span>
 sudo docker logs -f wssc
 </pre></div>
+</td></tr></table>
 
 <p>如果看到日志中有 django 相关的异常信息 (以 <code>Traceback (most recent call last):</code> 开头 ), 如下:</p>
-<div class="codehilite"><pre>Traceback <span class="o">(</span>most recent call last<span class="o">)</span>:
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3</pre></div></td><td class="code"><div class="codehilite"><pre>Traceback <span class="o">(</span>most recent call last<span class="o">)</span>:
   ... <span class="o">(</span>出错的代码<span class="o">)</span>
 _mysql_exceptions.OperationalError: <span class="o">(</span>2003, <span class="s2">&quot;Can&#39;t connect to MySQL server on &#39;192.168.2.209&#39; (113)&quot;</span><span class="o">)</span>        <span class="o">(</span>错误信息<span class="o">)</span>
 </pre></div>
+</td></tr></table>
 
 <p>表示启动未成功, 通常与数据库连接有关, 需要排查数据库问题, 例如 <code>113</code>, <code>111</code> 错误</p>
 <p>如果日志中未有 django 异常信息, 并且在日志最后看到如下输出, 表示启动成功(且完成):</p>
-<div class="codehilite"><pre>- Starting supervisor...
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2</pre></div></td><td class="code"><div class="codehilite"><pre>- Starting supervisor...
 - Starting Nginx...
 </pre></div>
+</td></tr></table>
 
 <p>5.说明:</p>
 <blockquote>
@@ -1387,7 +1475,38 @@ _mysql_exceptions.OperationalError: <span class="o">(</span>2003, <span class="s
 </ol>
 </blockquote>
 <p>6.正常启动的日志:</p>
-<div class="codehilite"><pre>- Copying configs...
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32</pre></div></td><td class="code"><div class="codehilite"><pre>- Copying configs...
 - Updating Nginx settings...
 nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
 nginx: configuration file /etc/nginx/nginx.conf <span class="nb">test </span>is successful
@@ -1420,9 +1539,63 @@ Linking <span class="s1">&#39;/usr/local/lib/python3.5/site-packages/jsoneditor/
 Unlinking stale socket /var/www/project/data/logs/supervisor/supervisor.sock
 - Starting Nginx...
 </pre></div>
+</td></tr></table>
 
-<p>4.2.6 初始化已经编辑好的模板</p>
-<p>视部署情况而定, 由模板制作的同事提供.</p>
+<p>4.2.6 创建管理员用户</p>
+<p>应用成功部署后, 通过命令行的方式创建管理员用户. 执行如下命令:</p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2</pre></div></td><td class="code"><div class="codehilite"><pre># 管理员用户名为 admin
+docker exec -it wssc python3 ./app/backend/manage.py createsuperuser --username admin --email admin@fake.com
+</pre></div>
+</td></tr></table>
+
+<p>输出如下: </p>
+<p><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10</pre></div></td><td class="code"><div class="codehilite"><pre># output:
+
+
+- Current server mode: dev
+- Debug mode: True
+- Allowed hosts: [&#39;*&#39;]
+- Check file structures...
+
+
+Password: 
+</pre></div>
+</td></tr></table>
+当出现 <code>Password:</code> 时, 输入管理员用户密码, 按下 <code>Enter</code> 键确认输入. 这时会再次提示输入密码, 继续输入. 注意密码有一定要求, 不能过于简单. 创建成功后, 控制台会打印: </p>
+<p><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1</pre></div></td><td class="code"><div class="codehilite"><pre>Superuser created successfully.
+</pre></div>
+</td></tr></table>
+接下来就可以使用管理员用户登录系统了.</p>
+<p>4.2.7 初始化模板标签, 阶段和使用机构数据.</p>
+<p>在 Django 的 admin 页面, 管理员可以自行添加这些数据. 管理员也可用通过 Django <code>loaddata</code> 命令来导入预先导出的 fixture json 文件. 具体的, 参考 Django 文档. 命令行参考: </p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5
+6
+7</pre></div></td><td class="code"><div class="codehilite"><pre>docker exec -it wssc_dev python3 ./app/backend/manage.py loaddata
+
+usage: manage.py loaddata [-h] [--version] [-v {0,1,2,3}]
+                          [--settings SETTINGS] [--pythonpath PYTHONPATH]
+                          [--traceback] [--no-color] [--database DATABASE]
+                          [--app APP_LABEL] [--ignorenonexistent] [-e EXCLUDE]
+                          fixture [fixture ...]
+</pre></div>
+</td></tr></table>
+
+<p>4.2.8 导入模板</p>
+<p>导入模板. 导出的模板文件是一个 <code>zip</code> 压缩包文件.</p>
 <h3 id="5">5. 内网环境下部署<a class="headerlink" href="#5" title="Permanent link"></a></h3>
 <h4 id="51-docker">5.1 外网环境下拉取/编译 docker 镜像<a class="headerlink" href="#51-docker" title="Permanent link"></a></h4>
 <blockquote>
@@ -1439,7 +1612,13 @@ Unlinking stale socket /var/www/project/data/logs/supervisor/supervisor.sock
 </ol>
 </blockquote>
 <p>5.1.1 拉取对象存储 <code>minio/minio</code>，OnlyOffice <code>onlyoffice/documentserver</code>, MySQL 5.7 <code>mysql:5.7</code> 镜像, RediSearch <code>redislabs/redisearch</code> 镜像</p>
-<div class="codehilite"><pre>docker pull minio/minio:latest
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5
+6
+7</pre></div></td><td class="code"><div class="codehilite"><pre>docker pull minio/minio:latest
 
 docker pull vadden/wssc_office:latest
 
@@ -1447,10 +1626,12 @@ docker pull mysql:5.7
 
 docker pull redislabs/redisearch
 </pre></div>
+</td></tr></table>
 
 <p>5.1.2 拉取文书生成应用服务器镜像</p>
-<div class="codehilite"><pre>sudo docker pull 176.122.188.100:16000/wssc-master:latest
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1</pre></div></td><td class="code"><div class="codehilite"><pre>sudo docker pull 176.122.188.100:16000/wssc-master:latest
 </pre></div>
+</td></tr></table>
 
 <h4 id="52">5.2 保存本地镜像<a class="headerlink" href="#52" title="Permanent link"></a></h4>
 <blockquote>
@@ -1464,7 +1645,20 @@ docker pull redislabs/redisearch
 </ol>
 </blockquote>
 <p>5.2.1 CentOS 7 或 Ubuntu 14.04</p>
-<div class="codehilite"><pre># minio
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14</pre></div></td><td class="code"><div class="codehilite"><pre># minio
 docker image save minio/minio:latest -o ./minio_latest.tar.gz
 
 # mysql
@@ -1479,9 +1673,23 @@ docker image save redislabs/redisearch -o ./redisearch_latest.tar.gz
 # 文书生成应用服务器
 docker image save 176.122.188.100:16000/wssc-master:latest -o ./wssc_master_latest.tar.gz
 </pre></div>
+</td></tr></table>
 
 <p>5.2.2 CentOS 6.5</p>
-<div class="codehilite"><pre># minio
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14</pre></div></td><td class="code"><div class="codehilite"><pre># minio
 docker save minio/minio:latest -o ./minio_latest.tar.gz
 
 # mysql
@@ -1496,6 +1704,7 @@ docker save redislabs/redisearch -o ./redisearch_latest.tar.gz
 # 文书生成应用服务器
 docker save 176.122.188.100:16000/wssc-master:latest -o ./wssc_master_latest.tar.gz
 </pre></div>
+</td></tr></table>
 
 <h4 id="53">5.3 加载本地镜像<a class="headerlink" href="#53" title="Permanent link"></a></h4>
 <blockquote>
@@ -1510,7 +1719,21 @@ docker save 176.122.188.100:16000/wssc-master:latest -o ./wssc_master_latest.tar
 </blockquote>
 <p>5.3.1 复制镜像到内网机器</p>
 <p>5.3.2 CentOS 7 或 Ubuntu 14.04</p>
-<div class="codehilite"><pre># minio
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15</pre></div></td><td class="code"><div class="codehilite"><pre># minio
 docker image load -i ./minio_latest.tar.gz
 
 # mysql
@@ -1526,9 +1749,24 @@ docker image load -i ./redisearch_latest.tar.gz
 # 文书生成应用服务器
 docker image load -i ./wssc_master_latest.tar.gz
 </pre></div>
+</td></tr></table>
 
 <p>5.3.3 CentOS 6.5</p>
-<div class="codehilite"><pre># minio
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15</pre></div></td><td class="code"><div class="codehilite"><pre># minio
 docker load -i ./minio_latest.tar.gz
 
 # mysql
@@ -1544,54 +1782,74 @@ docker load -i ./redisearch_latest.tar.gz
 # 文书生成应用服务器
 docker load -i ./wssc_master_latest.tar.gz
 </pre></div>
+</td></tr></table>
 
 <h4 id="54">5.4 运行服务<a class="headerlink" href="#54" title="Permanent link"></a></h4>
 <p>5.4.1 检查各镜像是否加载</p>
-<div class="codehilite"><pre># CentOS 7, Ubuntu 14.04
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5</pre></div></td><td class="code"><div class="codehilite"><pre># CentOS 7, Ubuntu 14.04
 docker image ls
 
 # CentOS 6.5
 docker images
 </pre></div>
+</td></tr></table>
 
 <p>5.4.2 运行各服务</p>
 <p>运行方式参阅 <a href="#42">4.2 运行各服务</a> , 但需要注意的是, 如果镜像加载后没有识别到 repository 和 tag, 运行时需要使用 image id 替换, 例如将下列命令中的 repository:tag 替换为 image id:</p>
-<div class="codehilite"><pre>docker run --name mysql57 -v /var/www/mysql:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=root -p 13306:3306 -d mysql:5.7
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1</pre></div></td><td class="code"><div class="codehilite"><pre>docker run --name mysql57 -v /var/www/mysql:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=Zopen2013 -p 13306:3306 -d mysql:5.7
 </pre></div>
+</td></tr></table>
 
-<div class="codehilite"><pre>docker run --name mysql57 -v /var/www/mysql:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=root -p 13306:3306 -d &lt;IMAGE ID&gt;
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1</pre></div></td><td class="code"><div class="codehilite"><pre>docker run --name mysql57 -v /var/www/mysql:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=Zopen2013 -p 13306:3306 -d &lt;IMAGE ID&gt;
 </pre></div>
+</td></tr></table>
 
 <h3 id="6">6. 测试是否部署成功<a class="headerlink" href="#6" title="Permanent link"></a></h3>
 <ol>
 <li>使用 mysqlclient 连接 mysql 数据库, 测试是否能够连接</li>
 <li>使用 360 浏览器或 chrome 浏览器访问对象存储的 <code>http://&lt;ip&gt;:&lt;port&gt;</code>, 测试是否能否访问</li>
 <li>使用 360 浏览器或 chrome 浏览器访问文档编辑器的 <code>http://&lt;ip&gt;:&lt;port&gt;</code>, 测试是否出现欢迎页面</li>
-<li>使用 360 浏览器或 chrome 浏览器访问 <code>http://&lt;ip&gt;:&lt;port&gt;/</code> 进行登录, 初始管理员用户名和密码是 <code>admin:rootroot</code>, 登录成功, 系统即部署完成.</li>
+<li>使用 360 浏览器或 chrome 浏览器访问 <code>http://&lt;ip&gt;:&lt;port&gt;/</code> 进行登录, 登录名和密码是 4.2.6 创建的管理员用户, 登录成功, 系统即部署完成.</li>
 </ol>
 <h3 id="7">7. 维护<a class="headerlink" href="#7" title="Permanent link"></a></h3>
 <h4 id="71">7.1 首次部署失败, 需要重新部署怎么办?<a class="headerlink" href="#71" title="Permanent link"></a></h4>
 <ol>
 <li>
 <p>删除并重建数据库</p>
-<div class="codehilite"><pre><span class="c1"># 删除数据库</span>
-sudo docker <span class="nb">exec</span> -it mysql57 mysql -uroot -proot -e <span class="s2">&quot;drop database wssc;&quot;</span>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11</pre></div></td><td class="code"><div class="codehilite"><pre><span class="c1"># 删除数据库</span>
+sudo docker <span class="nb">exec</span> -it mysql57 mysql -uroot -pZopen2013 -e <span class="s2">&quot;drop database wssc;&quot;</span>
 
 <span class="c1"># 查看数据库是否删除</span>
-sudo docker <span class="nb">exec</span> -it mysql57 mysql -uroot -proot -e <span class="s2">&quot;show databases;&quot;</span>
+sudo docker <span class="nb">exec</span> -it mysql57 mysql -uroot -pZopen2013 -e <span class="s2">&quot;show databases;&quot;</span>
 
 <span class="c1"># 创建数据库</span>
-sudo docker <span class="nb">exec</span> -it mysql57 mysql -uroot -proot -e <span class="s2">&quot;create database wssc charset=&#39;utf8&#39;;&quot;</span>
+sudo docker <span class="nb">exec</span> -it mysql57 mysql -uroot -pZopen2013 -e <span class="s2">&quot;create database wssc charset=&#39;utf8&#39;;&quot;</span>
 
 <span class="c1"># 查看数据库是否创建成功</span>
-sudo docker <span class="nb">exec</span> -it mysql57 mysql -uroot -proot -e <span class="s2">&quot;show databases;&quot;</span>
+sudo docker <span class="nb">exec</span> -it mysql57 mysql -uroot -pZopen2013 -e <span class="s2">&quot;show databases;&quot;</span>
 </pre></div>
+</td></tr></table>
 
 </li>
 <li>
 <p>删除应用服务器的在宿主机上的持久化文件夹, 例如 <code>/var/www/project/data</code></p>
-<div class="codehilite"><pre>rm -rf /var/www/project/data/
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1</pre></div></td><td class="code"><div class="codehilite"><pre>rm -rf /var/www/project/data/
 </pre></div>
+</td></tr></table>
 
 </li>
 <li>
