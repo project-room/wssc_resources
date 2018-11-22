@@ -1217,7 +1217,7 @@ body .markdown-body
 <li><code>sudo service nginx start</code> - 启动 Nginx </li>
 </ul>
 <ol>
-<li>访问 <code>http://&lt;server_name&gt;:&lt;listen&gt;/</code> 地址, 测试是否能够使用.</li>
+<li>访问 <code>http://&lt;server_name&gt;:&lt;listen&gt;/</code> 地址, 测试是否能够使用. 如果返回 <code>403</code>, 检查 Nginx 对于 <code>root</code> 目录的访问权限, 检查 SELinux 设置, 检查防火墙设置.</li>
 </ol>
 <h3 id="2">2. 后端<a class="headerlink" href="#2" title="Permanent link"></a></h3>
 <ol>

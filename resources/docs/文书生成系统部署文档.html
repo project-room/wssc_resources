@@ -1187,7 +1187,7 @@ sudo vi /etc/docker/daemon.json
 <p>该服务映射端口至 <code>8029</code>, 容器名为 <code>minio</code></p>
 </li>
 <li>
-<p>该服务用来存储文件, 文件在服务器上的保存位置是 <code>/var/www/minio/data</code></p>
+<p>该服务用来存储文件, 文件在服务器上的保存位置是 <code>/var/www/minio/data</code>. 运维同学可以设置 Linux 的定时任务来备份该文件夹.</p>
 </li>
 <li>
 <p>对象存储服务 web 页面访问端口是 <code>8029</code>, 用户名和密码是 <code>minio</code>, <code>minio123</code></p>
@@ -1230,7 +1230,7 @@ sudo docker <span class="nb">exec</span> -it mysql57 mysql -uroot -pZopen2013 -e
 <p>该服务映射端口至 <code>13306</code>, 容器名为 <code>mysql57</code></p>
 </li>
 <li>
-<p>数据文件在服务器上的保存位置是 <code>/var/www/mysql</code></p>
+<p>数据文件在服务器上的保存位置是 <code>/var/www/mysql</code>. 运维同学可以设置 Linux 的定时任务来备份该文件夹.</p>
 </li>
 <li>
 <p>数据库 root 用户密码是 <code>Zopen2013</code></p>
@@ -1294,7 +1294,7 @@ sudo docker <span class="nb">exec</span> -it mysql57 mysql -uroot -pZopen2013 -e
 
 <blockquote>
 <p>本 redis 服务加载了 RediSearch 模块. RediSearch 命令过期时间设置为了 10000 ms, 配置使用 aof 文件, 配置了内存淘汰策略为 volatile-lru</p>
-<p>Redis 数据保存至 <code>/var/www/redisearch</code> 文件夹中</p>
+<p>Redis 数据保存至 <code>/var/www/redisearch</code> 文件夹中. 运维同学可以设置 Linux 的定时任务来备份该文件夹.</p>
 <p>Redis 端口为 16379</p>
 </blockquote>
 <p>4.2.5 运行文书生成应用服务器</p>
@@ -1575,7 +1575,7 @@ Password:
 <p><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1</pre></div></td><td class="code"><div class="codehilite"><pre>Superuser created successfully.
 </pre></div>
 </td></tr></table>
-接下来就可以使用管理员用户登录系统了.</p>
+接下来就可以使用管理员用户登录系统了. 如果报错, 极有可能是无法连接数据库, 检查防火墙设置.</p>
 <p>4.2.7 初始化模板标签, 阶段和使用机构数据.</p>
 <p>在 Django 的 admin 页面, 管理员可以自行添加这些数据. 管理员也可用通过 Django <code>loaddata</code> 命令来导入预先导出的 fixture json 文件. 具体的, 参考 Django 文档. 命令行参考: </p>
 <table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1
@@ -1811,9 +1811,9 @@ docker images
 <h3 id="6">6. 测试是否部署成功<a class="headerlink" href="#6" title="Permanent link"></a></h3>
 <ol>
 <li>使用 mysqlclient 连接 mysql 数据库, 测试是否能够连接</li>
-<li>使用 360 浏览器或 chrome 浏览器访问对象存储的 <code>http://&lt;ip&gt;:&lt;port&gt;</code>, 测试是否能否访问</li>
-<li>使用 360 浏览器或 chrome 浏览器访问文档编辑器的 <code>http://&lt;ip&gt;:&lt;port&gt;</code>, 测试是否出现欢迎页面</li>
-<li>使用 360 浏览器或 chrome 浏览器访问 <code>http://&lt;ip&gt;:&lt;port&gt;/</code> 进行登录, 登录名和密码是 4.2.6 创建的管理员用户, 登录成功, 系统即部署完成.</li>
+<li>使用 360 浏览器或 chrome 浏览器访问对象存储的 <code>http://&lt;ip&gt;:&lt;port&gt;</code>, 测试是否能否访问. 如果不能访问, 检查防火墙设置. </li>
+<li>使用 360 浏览器或 chrome 浏览器访问文档编辑器的 <code>http://&lt;ip&gt;:&lt;port&gt;</code>, 测试是否出现欢迎页面. 如果不能访问, 检查防火墙设置. </li>
+<li>使用 360 浏览器或 chrome 浏览器访问 <code>http://&lt;ip&gt;:&lt;port&gt;/</code> 进行登录, 登录名和密码是 4.2.6 创建的管理员用户, 登录成功, 系统即部署完成. 如果返回 <code>403</code>, 检查 Nginx 对于 <code>root</code> 目录的访问权限, 检查 SELinux 设置, 检查防火墙设置.</li>
 </ol>
 <h3 id="7">7. 维护<a class="headerlink" href="#7" title="Permanent link"></a></h3>
 <h4 id="71">7.1 首次部署失败, 需要重新部署怎么办?<a class="headerlink" href="#71" title="Permanent link"></a></h4>
