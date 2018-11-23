@@ -1237,7 +1237,15 @@ body .markdown-body
 <p>7.启动开发服务器</p>
 <p>注意, 开发服务器应该运行在上一节 Nginx 配置后端服务指定的端口上.</p>
 <p><code>python3 manage.py runserver 0.0.0.0:&lt;IP&gt;</code></p>
-<p>8.启动 Celery worker</p>
+<p>8.创建管理员用户, 初始化一些数据</p>
+<p>登录 <code>http://0.0.0.0:&lt;IP&gt;/admin/</code>, 添加一些数据:</p>
+<ul>
+<li><code>ACCOUNT - 机构</code></li>
+<li><code>MAIN - 案件阶段</code></li>
+<li><code>MAIN - 模板标签</code></li>
+</ul>
+<p>数据库的某些字段, 需要以上几个模型的值作为初始值.</p>
+<p>9.启动 Celery worker</p>
 <p><strong>在一个新的终端中</strong>, 激活环境变量, 并启动 Celery worker:</p>
 <table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1
 2
@@ -1247,4 +1255,4 @@ celery worker -A app --loglevel=info
 </pre></div>
 </td></tr></table>
 
-<p>至此, 开发服务器应该成功启动. 下一步可以创建管理员用户.</p></article></body></html>
+<p>至此, 开发服务器应该成功启动.</p></article></body></html>
